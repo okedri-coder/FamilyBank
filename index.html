@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בנק המשימות - FamilyBank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-hover { transition: all 0.3s ease; }
+        .btn-hover:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .header-logo { max-width: 280px; height: auto; margin: 0 auto; display: block; }
+    </style>
+</head>
+<body class="min-h-screen p-4 pb-20">
+
+    <header class="text-center py-6 mb-8">
+        <img src="image1.png" alt="בנק המשימות" class="header-logo drop-shadow-2xl">
+        <div class="mt-4">
+            <button onclick="showParentLogin()" class="text-slate-400 hover:text-white transition-colors">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="block text-xs mt-1">לוח בקרה</span>
+            </button>
+        </div>
+    </header>
+
+    <main id="app-container" class="max-w-4xl mx-auto">
+        <div id="children-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </div>
+    </main>
+
+    <div id="parent-login" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 p-4">
+        <div class="glass p-8 rounded-3xl w-full max-w-md text-center">
+            <h2 class="text-2xl font-bold mb-6">כניסת הורה</h2>
+            <input type="password" id="parent-pin-input" placeholder="הזן קוד (ברירת מחדל: 1234)" 
+                   class="w-full bg-slate-800 border-none p-4 rounded-xl text-center text-xl mb-4 focus:ring-2 ring-blue-500 outline-none">
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="verifyParentPin()" class="bg-blue-600 p-4 rounded-xl font-bold btn-hover">כניסה</button>
+                <button onclick="hideModals()" class="bg-slate-700 p-4 rounded-xl font-bold btn-hover">ביטול</button>
+            </div>
+            <p id="login-error" class="text-red-400 mt-4 hidden">קוד שגוי, נסה שוב</p>
+        </div>
+    </div>
+
+    <div id="parent-panel" class="fixed inset-0 bg-slate-900 z-50 overflow-y-auto hidden">
+        <div class="p-6 max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold">ניהול מערכת</h2>
+                <button onclick="closeParentPanel()" class="bg-red-500/20 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/30">יציאה</button>
+            </div>
+
+            <div class="space-y-8">
+                <section class="glass p-6 rounded-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold"><i class="fas fa-users ml-2 text-blue-400"></i>ילדים</h3>
+                        <button onclick="addNewChild()" class="bg-blue-600 px-3 py-1 rounded-full text-sm font-bold">+</button>
+                    </div>
+                    <div id="admin-children-list" class="space-y-3"></div>
+                </section>
+
+                <section class="glass p-6 rounded-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold"><i class="fas fa-tasks ml-2 text-green-400"></i>משימות</h3>
+                        <button onclick="addNewTask()" class="bg-green-600 px-3 py-1 rounded-full text-sm font-bold">+</button>
+                    </div>
+                    <div id="admin-tasks-list" class="space-y-3"></div>
+                </section>
+
+                <section class="glass p-6 rounded-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold"><i class="fas fa-shopping-cart ml-2 text-purple-400"></i>חנות</h3>
+                        <button onclick="addNewReward()" class="bg-purple-600 px-3 py-1 rounded-full text-sm font-bold">+</button>
+                    </div>
+                    <div id="admin-rewards-list" class="space-y-3"></div>
+                </section>
+
+                <section class="text-center py-4">
+                    <button onclick="changeParentPin()" class="text-slate-500 text-sm hover:underline">שנה קוד כניסה</button>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div id="child-view" class="fixed inset-0 bg-slate-900 z-40 hidden overflow-y-auto">
+        <div class="p-6 max-w-2xl mx-auto pb-24">
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 id="view-child-name" class="text-3xl font-bold text-blue-400"></h2>
+                    <div class="text-2xl font-bold mt-1"><span id="view-child-balance">0</span> ₪</div>
+                </div>
+                <button onclick="closeChildView()" class="bg-slate-800 p-3 rounded-xl"><i class="fas fa-times"></i></button>
+            </header>
+
+            <div class="flex gap-2 mb-6">
+                <button onclick="toggleChildTab('tasks')" id="tab-tasks" class="flex-1 py-4 rounded-2xl font-bold text-lg bg-blue-600">משימות לביצוע</button>
+                <button onclick="toggleChildTab('shop')" id="tab-shop" class="flex-1 py-4 rounded-2xl font-bold text-lg bg-slate-800">חנות פרסים</button>
+            </div>
+
+            <div id="child-content" class="space-y-4"></div>
+
+            <div class="mt-12 border-t border-slate-800 pt-6">
+                <h3 class="text-lg font-bold mb-4">היסטוריית פעולות</h3>
+                <div id="child-history" class="space-y-2 text-sm text-slate-400"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure Initializer
+        let state = JSON.parse(localStorage.getItem('familyBankDB')) || {
+            pin: "1234",
+            children: [],
+            tasks: [],
+            rewards: []
+        };
+
+        function save() {
+            localStorage.setItem('familyBankDB', JSON.stringify(state));
+            renderAll();
+        }
+
+        // --- Modals & Views Logic ---
+        function showParentLogin() {
+            document.getElementById('parent-login').classList.remove('hidden');
+            document.getElementById('parent-pin-input').focus();
+        }
+
+        function hideModals() {
+            document.querySelectorAll('#parent-login').forEach(m => m.classList.add('hidden'));
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('parent-pin-input').value = '';
+        }
+
+        function verifyParentPin() {
+            const pin = document.getElementById('parent-pin-input').value;
+            if (pin === state.pin) {
+                hideModals();
+                document.getElementById('parent-panel').classList.remove('hidden');
+                renderAdmin();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        function closeParentPanel() {
+            document.getElementById('parent-panel').classList.add('hidden');
+        }
+
+        let activeChildId = null;
+        function openChildView(id) {
+            activeChildId = id;
+            document.getElementById('child-view').classList.remove('hidden');
+            toggleChildTab('tasks');
+            renderChildView();
+        }
+
+        function closeChildView() {
+            document.getElementById('child-view').classList.add('hidden');
+            activeChildId = null;
+        }
+
+        // --- Rendering Logic ---
+        function renderAll() {
+            const grid = document.getElementById('children-grid');
+            grid.innerHTML = state.children.map(child => `
+                <div onclick="openChildView('${child.id}')" class="glass p-6 rounded-3xl text-center btn-hover cursor-pointer border-b-4 border-blue-500">
+                    <div class="text-4xl mb-2">👤</div>
+                    <h3 class="text-2xl font-bold">${child.name}</h3>
+                    <div class="text-xl font-bold text-blue-400 mt-2">${child.balance} ₪</div>
+                </div>
+            `).join('');
+        }
+
+        function renderAdmin() {
+            // Admin Children
+            document.getElementById('admin-children-list').innerHTML = state.children.map(c => `
+                <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl">
+                    <span>${c.name} (${c.balance} ₪)</span>
+                    <div class="flex gap-2">
+                        <button onclick="editBalance('${c.id}')" class="text-blue-400 text-xs">ערוך</button>
+                        <button onclick="deleteItem('children', '${c.id}')" class="text-red-400 text-xs">מחק</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Admin Tasks
+            document.getElementById('admin-tasks-list').innerHTML = state.tasks.map(t => `
+                <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl">
+                    <span>${t.text} (${t.price} ₪)</span>
+                    <button onclick="deleteItem('tasks', '${t.id}')" class="text-red-400 text-xs">מחק</button>
+                </div>
+            `).join('');
+
+            // Admin Rewards
+            document.getElementById('admin-rewards-list').innerHTML = state.rewards.map(r => `
+                <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl">
+                    <span>${r.text} (${r.price} ₪)</span>
+                    <button onclick="deleteItem('rewards', '${r.id}')" class="text-red-400 text-xs">מחק</button>
+                </div>
+            `).join('');
+        }
+
+        function renderChildView() {
+            const child = state.children.find(c => c.id === activeChildId);
+            if (!child) return;
+
+            document.getElementById('view-child-name').innerText = child.name;
+            document.getElementById('view-child-balance').innerText = child.balance;
+
+            const isTasks = document.getElementById('tab-tasks').classList.contains('bg-blue-600');
+            const list = isTasks ? state.tasks : state.rewards;
+            const container = document.getElementById('child-content');
+
+            container.innerHTML = list.map(item => `
+                <button onclick="${isTasks ? 'completeTask' : 'buyReward'}('${item.id}')" 
+                        class="w-full flex justify-between items-center p-5 rounded-2xl glass btn-hover text-right">
+                    <span class="text-lg font-bold">${item.text}</span>
+                    <span class="text-xl font-bold ${isTasks ? 'text-green-400' : 'text-purple-400'}">
+                        ${isTasks ? '+' : '-'}${item.price} ₪
+                    </span>
+                </button>
+            `).join('') || `<p class="text-center text-slate-500 py-10">אין פריטים להצגה</p>`;
+
+            // History
+            document.getElementById('child-history').innerHTML = child.history.slice().reverse().map(h => `
+                <div class="flex justify-between py-1 border-b border-white/5">
+                    <span>${h.text}</span>
+                    <span class="${h.amount > 0 ? 'text-green-500' : 'text-red-500'}">${h.amount > 0 ? '+' : ''}${h.amount} ₪</span>
+                </div>
+            `).join('') || 'אין פעולות עדיין';
+        }
+
+        function toggleChildTab(tab) {
+            const taskBtn = document.getElementById('tab-tasks');
+            const shopBtn = document.getElementById('tab-shop');
+            
+            if (tab === 'tasks') {
+                taskBtn.className = "flex-1 py-4 rounded-2xl font-bold text-lg bg-blue-600";
+                shopBtn.className = "flex-1 py-4 rounded-2xl font-bold text-lg bg-slate-800";
+            } else {
+                taskBtn.className = "flex-1 py-4 rounded-2xl font-bold text-lg bg-slate-800";
+                shopBtn.className = "flex-1 py-4 rounded-2xl font-bold text-lg bg-purple-600";
+            }
+            renderChildView();
+        }
+
+        // --- Actions ---
+        function addNewChild() {
+            const name = prompt("שם הילד:");
+            if (name) {
+                state.children.push({ id: Date.now().toString(), name, balance: 0, history: [] });
+                save();
+                renderAdmin();
+            }
+        }
+
+        function addNewTask() {
+            const text = prompt("תיאור המשימה:");
+            const price = parseInt(prompt("תגמול בשקלים:"));
+            if (text && !isNaN(price)) {
+                state.tasks.push({ id: Date.now().toString(), text, price });
+                save();
+                renderAdmin();
+            }
+        }
+
+        function addNewReward() {
+            const text = prompt("שם הפרס:");
+            const price = parseInt(prompt("עלות בשקלים:"));
+            if (text && !isNaN(price)) {
+                state.rewards.push({ id: Date.now().toString(), text, price });
+                save();
+                renderAdmin();
+            }
+        }
+
+        function editBalance(id) {
+            const child = state.children.find(c => c.id === id);
+            const newBalance = prompt(`עדכן יתרה עבור ${child.name}:`, child.balance);
+            if (newBalance !== null) {
+                child.balance = parseInt(newBalance);
+                child.history.push({ text: "עדכון ידני ע''י הורה", amount: 0, date: new Date() });
+                save();
+                renderAdmin();
+            }
+        }
+
+        function deleteItem(type, id) {
+            if (confirm("בטוח שברצונך למחוק?")) {
+                state[type] = state[type].filter(item => item.id !== id);
+                save();
+                renderAdmin();
+            }
+        }
+
+        function completeTask(taskId) {
+            const task = state.tasks.find(t => t.id === taskId);
+            const child = state.children.find(c => c.id === activeChildId);
+            child.balance += task.price;
+            child.history.push({ text: `ביצוע: ${task.text}`, amount: task.price, date: new Date() });
+            save();
+            renderChildView();
+        }
+
+        function buyReward(rewardId) {
+            const reward = state.rewards.find(r => r.id === rewardId);
+            const child = state.children.find(c => c.id === activeChildId);
+            if (child.balance >= reward.price) {
+                child.balance -= reward.price;
+                child.history.push({ text: `קנייה: ${reward.text}`, amount: -reward.price, date: new Date() });
+                save();
+                renderChildView();
+            } else {
+                alert("אין לך מספיק כסף בקופה!");
+            }
+        }
+
+        function changeParentPin() {
+            const newPin = prompt("הזן קוד הורה חדש:");
+            if (newPin && newPin.length >= 4) {
+                state.pin = newPin;
+                save();
+                alert("הקוד שונה בהצלחה!");
+            }
+        }
+
+        // Init
+        renderAll();
+    </script>
+</body>
+</html>
