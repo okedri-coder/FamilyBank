@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>בנק המשימות</title>
+    <style>
+        body { background: radial-gradient(circle at top, #1e293b 0%, #020617 100%); }
+        .kid-btn { transition: all 0.1s; border-bottom: 8px solid #9a3412; }
+        .kid-btn:active { transform: translateY(4px); border-bottom-width: 4px; }
+        .text-glow { text-shadow: 0 0 15px rgba(249, 115, 22, 0.6); }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen p-4 font-sans text-right border-t-8 border-orange-500">
+    <div id="app" class="max-w-md mx-auto">
+        
+        <div id="main-screen" class="text-center mt-10">
+            <div class="mb-10">
+                <h1 class="text-6xl font-black text-orange-500 tracking-tighter text-glow">בנק</h1>
+                <h1 class="text-5xl font-black text-blue-400 tracking-tighter -mt-2">המשימות</h1>
+            </div>
+            
+            <div id="kids-list" class="grid grid-cols-2 gap-4"></div>
+            
+            <button onclick="showScreen('login-screen')" class="w-full mt-12 bg-slate-800/50 p-4 rounded-2xl font-bold border border-slate-700 hover:bg-slate-700 transition shadow-lg">
+                ⚙️ לוח בקרה הורה
+            </button>
+        </div>
+
+        <div id="login-screen" class="hidden text-center mt-20 space-y-6">
+            <h2 class="text-3xl font-black text-orange-400">כניסת הורה</h2>
+            <p class="text-slate-400 italic">הזן קוד (ברירת מחדל: 1234)</p>
+            <input type="password" id="pin-input" inputmode="numeric" maxlength="8" class="bg-slate-800 text-center text-5xl p-4 rounded-2xl border-2 border-slate-700 w-48 focus:border-orange-500 outline-none">
+            <div class="flex gap-2 justify-center">
+                <button onclick="verifyPIN()" class="bg-orange-600 px-8 py-3 rounded-xl font-bold text-lg">כניסה</button>
+                <button onclick="showScreen('main-screen')" class="bg-slate-700 px-8 py-3 rounded-xl font-bold text-lg">ביטול</button>
+            </div>
+            <p id="login-error" class="text-red-500 font-bold hidden">❌ קוד שגוי</p>
+        </div>
+
+        <div id="parent-panel" class="hidden space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h2 class="text-2xl font-bold text-orange-400 font-black">⚙️ ניהול</h2>
+                <button onclick="showScreen('change-pin-screen')" class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400">🔑 שנה קוד</button>
+            </div>
+            
+            <section class="bg-slate-900/80 p-4 rounded-2xl border border-white/5">
+                <h3 class="font-bold mb-3 text-blue-300">👦 ילדים</h3>
+                <div id="manage-kids-list" class="space-y-2 mb-3"></div>
+                <div class="flex gap-2">
+                    <input id="newChildName" class="flex-1 bg-slate-800 p-3 rounded-xl border border-slate-700 outline-none" placeholder="שם ילד חדש">
+                    <button onclick="addChild()" class="bg-blue-600 px-6 rounded-xl font-bold text-xl">+</button>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-2 gap-4">
+                <section class="bg-slate-900/80 p-3 rounded-2xl border border-white/5">
+                    <h3 class="font-bold text-green-400 text-xs mb-2 text-center">✅ משימות</h3>
+                    <div id="manage-tasks-list" class="space-y-1 mb-2 max-h-32 overflow-y-auto text-[10px]"></div>
+                    <input id="tn" placeholder="שם" class="w-full bg-slate-800 p-1 mb-1 rounded text-xs border border-slate-700"><input id="tp" type="number" placeholder="₪" class="w-full bg-slate-800 p-1 mb-1 rounded text-xs border border-slate-700">
+                    <button onclick="addTask()" class="w-full bg-green-700 py-1 rounded font-bold text-xs uppercase">הוסף</button>
+                </section>
+                <section class="bg-slate-900/80 p-3 rounded-2xl border border-white/5">
+                    <h3 class="font-bold text-purple-400 text-xs mb-2 text-center">🛍️ חנות</h3>
+                    <div id="manage-shop-list" class="space-y-1 mb-2 max-h-32 overflow-y-auto text-[10px]"></div>
+                    <input id="sn" placeholder="שם" class="w-full bg-slate-800 p-1 mb-1 rounded text-xs border border-slate-700"><input id="sp" type="number" placeholder="₪" class="w-full bg-slate-800 p-1 mb-1 rounded text-xs border border-slate-700">
+                    <button onclick="addShop()" class="w-full bg-purple-700 py-1 rounded font-bold text-xs uppercase">הוסף</button>
+                </section>
+            </div>
+            <button onclick="showScreen('main-screen')" class="w-full bg-slate-800 py-4 rounded-2xl font-bold border border-slate-700 mt-4">⬅️ חזרה</button>
+        </div>
+
+        <div id="profile-panel" class="hidden space-y-4">
+            <h2 id="profile-name" class="text-3xl font-black text-orange-400 text-center"></h2>
+            <div class="text-center bg-slate-900/90 p-8 rounded-[2.5rem] border border-orange-500/20 shadow-2xl">
+                <div id="profile-bal" class="text-6xl font-black text-white my-4">0 ₪</div>
+                <hr class="border-slate-800 my-6">
+                <input type="number" id="amount-to-change" inputmode="numeric" placeholder="סכום לשינוי" class="w-full bg-slate-800 text-center text-3xl p-4 rounded-2xl border border-slate-700 focus:border-orange-500 outline-none mb-6">
+                <div class="flex gap-4">
+                    <button onclick="changeBalManual('minus')" class="flex-1 bg-red-600 py-4 rounded-2xl font-bold text-xl active:scale-95 transition-transform">החסר</button>
+                    <button onclick="changeBalManual('plus')" class="flex-1 bg-green-600 py-4 rounded-2xl font-bold text-xl active:scale-95 transition-transform">הוסף</button>
+                </div>
+            </div>
+            <h3 class="font-bold text-slate-400 px-2 text-sm uppercase tracking-widest">היסטוריה:</h3>
+            <div id="history-list" class="bg-slate-900/50 p-4 rounded-2xl h-40 overflow-y-auto text-sm border border-slate-800"></div>
+            <div class="flex gap-2">
+                <button onclick="deleteChild()" class="flex-1 bg-red-900/20 p-4 rounded-2xl text-red-400 font-bold text-xs">מחק פרופיל</button>
+                <button onclick="showScreen('parent-panel')" class="flex-1 bg-slate-800 p-4 rounded-2xl font-bold">חזרה</button>
+            </div>
+        </div>
+
+        <div id="child-panel" class="hidden">
+            <div class="text-center mb-8">
+                <h2 id="child-title" class="text-2xl font-bold text-slate-400"></h2>
+                <div id="child-bal" class="text-7xl font-black text-orange-400 my-2 tracking-tighter">0 ₪</div>
+            </div>
+            <div class="flex gap-3 mb-8">
+                <button onclick="renderChildView('tasks')" class="flex-1 bg-green-700 py-5 rounded-[2rem] font-black text-xl shadow-lg active:translate-y-2 transition-all">✅ משימות</button>
+                <button onclick="renderChildView('shop')" class="flex-1 bg-purple-700 py-5 rounded-[2rem] font-black text-xl shadow-lg active:translate-y-2 transition-all">🛍️ חנות</button>
+            </div>
+            <div id="view-title" class="text-5xl font-black mb-8 text-center underline decoration-4 underline-offset-8 transition-all"></div>
+            <div id="child-content" class="space-y-4 pb-24"></div>
+            <button onclick="showScreen('main-screen')" class="w-full mt-6 text-slate-500 underline font-bold text-center block">❌ יציאה</button>
+        </div>
+
+        <div id="change-pin-screen" class="hidden text-center mt-20 space-y-6 bg-slate-900 p-8 rounded-3xl border border-slate-800">
+            <h2 class="text-2xl font-black text-orange-400">🔑 שנה קוד הורה</h2>
+            <input type="password" id="new-pin-input" inputmode="numeric" maxlength="8" placeholder="קוד חדש" class="bg-slate-800 text-center text-4xl p-5 rounded-2xl border-2 border-slate-700 w-full outline-none focus:border-orange-500">
+            <div class="flex gap-3">
+                <button onclick="saveNewPIN()" class="flex-1 bg-orange-600 py-4 rounded-2xl font-bold text-xl">שמור</button>
+                <button onclick="showScreen('parent-panel')" class="flex-1 bg-slate-700 py-4 rounded-2xl font-bold text-xl">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let db = JSON.parse(localStorage.getItem('dreamBankDB')) || { kids: [], tasks: [], shop: [], parentPIN: "1234" };
+        let currentIdx = null;
+
+        function save() { localStorage.setItem('dreamBankDB', JSON.stringify(db)); }
+
+        function showScreen(id) {
+            document.querySelectorAll('#app > div').forEach(d => d.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            if (id === 'parent-panel') renderManage();
+        }
+
+        function verifyPIN() {
+            if (document.getElementById('pin-input').value === db.parentPIN.toString()) showScreen('parent-panel');
+            else document.getElementById('login-error').classList.remove('hidden');
+        }
+
+        function saveNewPIN() {
+            if (document.getElementById('new-pin-input').value) {
+                db.parentPIN = document.getElementById('new-pin-input').value;
+                save();
+                showScreen('parent-panel');
+            }
+        }
+
+        function addChild() { 
+            let n = document.getElementById('newChildName').value;
+            if(n) { db.kids.push({name:n, balance:0, history:[]}); save(); document.getElementById('newChildName').value=''; renderManage(); renderMain(); }
+        }
+
+        function addTask() {
+            let n = document.getElementById('tn'), p = document.getElementById('tp');
+            if(n.value && p.value) { db.tasks.push({name: n.value, price: parseInt(p.value)}); save(); n.value=''; p.value=''; renderManage(); }
+        }
+
+        function addShop() {
+            let n = document.getElementById('sn'), p = document.getElementById('sp');
+            if(n.value && p.value) { db.shop.push({name: n.value, price: parseInt(p.value)}); save(); n.value=''; p.value=''; renderManage(); }
+        }
+
+        function renderManage() {
+            document.getElementById('manage-kids-list').innerHTML = db.kids.map((k,i) => `
+                <div class="flex justify-between items-center bg-slate-800/50 p-4 rounded-2xl border border-white/5 mb-2 shadow-sm">
+                    <span class="font-bold text-lg">${k.name}</span>
+                    <button onclick="renderProfile(${i})" class="bg-blue-600 px-5 py-2 rounded-xl text-sm font-bold shadow-lg">פרופיל</button>
+                </div>`).join('');
+            document.getElementById('manage-tasks-list').innerHTML = db.tasks.map((t,i) => `<div class="flex justify-between bg-slate-800 p-2 rounded mb-1 border border-slate-700/50"><span>${t.name}</span><button onclick="db.tasks.splice(${i},1);save();renderManage()" class="text-red-500 font-bold">✕</button></div>`).join('');
+            document.getElementById('manage-shop-list').innerHTML = db.shop.map((s,i) => `<div class="flex justify-between bg-slate-800 p-2 rounded mb-1 border border-slate-700/50"><span>${s.name}</span><button onclick="db.shop.splice(${i},1);save();renderManage()" class="text-red-500 font-bold">✕</button></div>`).join('');
+        }
+
+        function renderProfile(i) {
+            currentIdx = i;
+            document.getElementById('profile-name').innerText = db.kids[i].name;
+            document.getElementById('profile-bal').innerText = db.kids[i].balance + " ₪";
+            document.getElementById('amount-to-change').value = '';
+            document.getElementById('history-list').innerHTML = db.kids[i].history.map(h => `<div class="bg-slate-800 p-2 rounded-xl mb-2 border-r-4 border-orange-500 text-xs">${h}</div>`).join('') || "<p class='text-center mt-6 text-slate-600'>אין פעולות</p>";
+            showScreen('profile-panel');
+        }
+
+        function changeBalManual(act) {
+            let a = parseInt(document.getElementById('amount-to-change').value);
+            if (isNaN(a) || a <= 0) return;
+            if (act === 'minus') a = -a;
+            db.kids[currentIdx].balance += a;
+            db.kids[currentIdx].history.unshift(`${new Date().toLocaleTimeString('he-IL')} - עריכה: ${a > 0 ? '+' : ''}${a}₪`);
+            save(); renderProfile(currentIdx); renderMain();
+        }
+
+        function deleteChild() { if(confirm("למחוק?")) { db.kids.splice(currentIdx,1); save(); showScreen('parent-panel'); renderMain(); } }
+
+        function openChild(i) {
+            currentIdx = i;
+            document.getElementById('child-title').innerText = "היי " + db.kids[i].name;
+            updateChildUI();
+            renderChildView('tasks');
+            showScreen('child-panel');
+        }
+        function updateChildUI() { document.getElementById('child-bal').innerText = db.kids[currentIdx].balance + " ₪"; }
+        function renderChildView(type) {
+            const tEl = document.getElementById('view-title');
+            if(type === 'tasks') { tEl.innerText = "✅ משימות"; tEl.className = "text-5xl font-black mb-8 text-center text-green-400 underline"; }
+            else { tEl.innerText = "🛍️ חנות"; tEl.className = "text-5xl font-black mb-8 text-center text-purple-400 underline"; }
+            document.getElementById('child-content').innerHTML = (type==='tasks'?db.tasks:db.shop).map(item => `
+                <button onclick="${type==='tasks'?'earn':'buy'}(${item.price},'${item.name}')" class="w-full bg-slate-900 p-6 rounded-[2rem] flex justify-between items-center font-bold border-b-8 border-slate-800 active:translate-y-2 active:border-b-0 shadow-xl transition-all">
+                    <span class="text-xl">${item.name}</span><span class="${type==='tasks'?'text-green-400':'text-purple-400'} text-2xl font-black">${item.price}₪</span>
+                </button>`).join('') || "<p class='text-center text-slate-500 mt-12'>ריק...</p>";
+        }
+
+        function earn(p, n) { db.kids[currentIdx].balance += p; db.kids[currentIdx].history.unshift(`${new Date().toLocaleTimeString('he-IL')} - הושלם: ${n} (+${p}₪)`); save(); updateChildUI(); }
+        function buy(p, n) { if(db.kids[currentIdx].balance >= p) { db.kids[currentIdx].balance -= p; db.kids[currentIdx].history.unshift(`${new Date().toLocaleTimeString('he-IL')} - קנייה: ${n} (-${p}₪)`); save(); updateChildUI(); } else alert("אין מספיק כסף!"); }
+        
+        function renderMain() {
+            document.getElementById('kids-list').innerHTML = db.kids.map((k,i) => `<button onclick="openChild(${i})" class="kid-btn bg-orange-600 py-12 rounded-[2.5rem] font-black text-3xl shadow-lg border-2 border-orange-400/30">${k.name}</button>`).join('');
+        }
+        renderMain();
+    </script>
+</body>
+</html>
